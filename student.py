@@ -32,7 +32,7 @@ def view_all(conn):
         students = cursor.fetchall()
         if students:
             headers = ["Student no.", "First Name", "Last Name", "Gender", "Degree Program"]
-            print("\n" + tabulate.tabulate(students, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
+            print("\n" + tabulate(students, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
 
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -44,7 +44,7 @@ def view_all(conn):
 
 def remove_student(conn):
     print("Select student to be removed.")
-    student_id = input("Enter student ID of student to be removed:")
+    student_id = int(input("Enter student ID of student to be removed:"))
 
     if not check_student_exists(conn, student_id):
         print("❌ Student doesn't exists.")
@@ -52,8 +52,11 @@ def remove_student(conn):
     
     try:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM student WHERE student_no = ?", (student_id))
+        cursor.execute("DELETE FROM fee WHERE student_no = ?", (student_id,))
+        cursor.execute("DELETE FROM membership WHERE student_no = ?", (student_id,))
+        cursor.execute("DELETE FROM student WHERE student_no = ?", (student_id,))
         conn.commit()
+        print("Successfully removed.")
     except Exception as e:
         print(f"❌ failed to remove student : {e}")
     return

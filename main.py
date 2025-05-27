@@ -305,14 +305,15 @@ def handle_reports(conn):
         4: report.view_filter_degprog, 
         5: report.view_filter_batch,
         6: report.view_filter_comm,
-        7: report.view_unpaid_members,
-        8: report.view_member_unpaid_fees,
-        9: report.view_late_payments,
-        10: report.view_members_highest_debt,
-        11: report.view_executive,
-        12: report.view_presidents,
-        13: report.get_active_inactive_percentage,
-        14: report.get_org_fee_summary
+        7: report.view_alumni,
+        8: report.view_unpaid_members,
+        9: report.view_member_unpaid_fees,
+        10: report.view_late_payments,
+        11: report.view_members_highest_debt,
+        12: report.view_executive,
+        13: report.view_presidents,
+        14: report.get_active_inactive_percentage,
+        15: report.get_org_fee_summary
     }
 
     run_menu_loop(display_reports_menu, report_commands, conn=conn)
