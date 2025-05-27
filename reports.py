@@ -8,43 +8,35 @@ def view_unpaid_members(conn):
     semester = input("Enter semester (1/2): ").strip()
     acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
 
-    # Extract years    
-    try:
-        start_year = int(acad_year[4:])
-        end_year = int(acad_year[:4])
-    except ValueError:
-        print("⚠️ Invalid academic year format. Please use YYYY-YYYY.")
-        return
-    
-    
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT DISTINCT
+            SELECT 
                 s.student_no,
                 s.first_name,
                 s.last_name,
-                m.role,
-                m.committee,
-                m.membership_status,
-            FROM fee f
-            JOIN membership m ON f.student_no = m.student_no
-                             AND f.org_name = m.org_name
-            JOIN student s ON m.student_no = s.student_no
+                m.acad_year,
+                m.semester,
+                f.amount_due,
+                f.amount_paid,
+                f.due_date
+            FROM 
+                membership m
+            NATURAL JOIN 
+                student s
+            NATURAL JOIN 
+                fee f
             WHERE
-                m.org_name = ?
-                AND f.fee_semester = ?
-                AND YEAR(f.due_date) IN (?, ?)
-                AND f.payment_date IS NULL
-            GROUP BY s.student_no
-            ORDER BY
-                s.last_name, s.first_name
-        """, (org_name, semester, start_year, end_year))
+                m.org_name=?
+                AND NOT f.is_fully_paid
+                AND m.acad_year=?
+                AND m.semester=?
+        """, (org_name, acad_year, semester))
         
         rows = cursor.fetchall()
         
         if rows:
-            headers = ["Student No", "First Name", "Last Name", "Role", "Committee", "Status"]
+            headers = ["Student No", "First Name", "Last Name", "Academic Year", "Semester", "Amount Due", "Amount Paid", "Due Date"]
             print(tabulate(rows, headers=headers, tablefmt="grid", stralign="center"))
         else:
             print("No members with unpaid fees found for the given criteria.")
@@ -59,20 +51,20 @@ def view_member_unpaid_fees(conn):
     student_no = input("Enter student number: ").strip()
 
     query = """
-            SELECT
-                f.org_name,
-                f.fee_semester,
-                f.amount_due,
-                f.amount_paid,
-                f.due_date,
+            SELECT 
+                fee_id,
+                org_name,
+                amount_due, 
+                amount_paid, 
+                due_date, 
+                fee_semester
             FROM 
-                fee f
-            WHERE 
-                f.student_no = ?
-            AND 
-                f.payment_date IS NULL
+                fee 
+            WHERE
+                NOT is_fully_paid
+                AND student_no=?
             ORDER BY 
-                f.org_name, f.due_date DESC, f.fee_semester DESC;
+                org_name, due_date DESC, fee_semester DESC;
             """
 
     try:
@@ -81,7 +73,7 @@ def view_member_unpaid_fees(conn):
         results = cursor.fetchall()
 
         if results:
-            headers = ["Organization", "Semester", "Amount Due", "Amount Paid", "Due Date"]
+            headers = ["Fee ID", "Organization", "Amount Due", "Amount Paid", "Due Date", "Semester"]
             print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
         else:
             print("✅ No unpaid fees found for this member.")
@@ -94,35 +86,41 @@ def view_member_unpaid_fees(conn):
 def view_late_payments(conn):
     print("View late payments by organization, semester, and academic year.")
     org_name = input("Enter organization name: ").strip()
-    semester = input("Enter semester (e.g. Fall, Spring): ").strip()
+    semester = input("Enter semester (1/2): ").strip()
     acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
 
     query = """
-        SELECT
-            s.student_no,
-            s.first_name,
-            s.last_name,
-            f.amount_due,
-            f.amount_paid,
-            f.due_date,
-            f.payment_date
-        FROM fee f
-        JOIN student s ON f.student_no = s.student_no
-        WHERE f.org_name = ?
-        AND f.fee_semester = ?
-        AND f.acad_year = ?
-        AND f.payment_date IS NOT NULL
-        AND f.payment_date > f.due_date
-        ORDER BY f.payment_date DESC;
+            SELECT
+                s.student_no,
+                s.first_name,
+                s.last_name,
+                f.fee_id,
+                f.amount_due,
+                f.amount_paid,
+                f.due_date,
+                f.payment_date
+            FROM
+                student s
+            NATURAL JOIN
+                membership m
+            NATURAL JOIN
+                fee f
+            WHERE
+                m.org_name=?
+                AND m.acad_year=?
+                AND m.semester=?
+                AND f.payment_date IS NOT NULL
+                AND f.payment_date > f.due_date
+            ORDER BY f.payment_date DESC
     """
 
     try:
         cursor = conn.cursor()
-        cursor.execute(query, (org_name, semester, acad_year))
+        cursor.execute(query, (org_name, acad_year, semester))
         results = cursor.fetchall()
 
         if results:
-            headers = ["Student No", "First Name", "Last Name", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
+            headers = ["Student No", "First Name", "Last Name", "Fee ID", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
             print(f"\nLate Payments for {org_name} - {semester} {acad_year}\n")
             print(tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
         else:
@@ -136,7 +134,7 @@ def view_late_payments(conn):
 def view_members_highest_debt(conn):
     print("View members with the highest debt by organization, semester, and academic year")
     org_name = input("Enter organization name: ").strip()
-    semester = input("Enter semester (e.g. Fall, Spring): ").strip()
+    semester = input("Enter semester (1/2): ").strip()
     acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
 
     try:
@@ -152,12 +150,11 @@ def view_members_highest_debt(conn):
                 JOIN membership m ON s.student_no = m.student_no
                 JOIN fee f ON m.student_no = f.student_no
                     AND m.org_name = f.org_name
-                    AND m.acad_year = f.acad_year
-                    AND m.semester = f.semester
+                    AND m.semester = f.fee_semester
                 WHERE
                     f.org_name = ?
-                    AND f.semester = ?
-                    AND f.acad_year = ?
+                    AND f.fee_semester = ?
+                    AND m.acad_year = ?
                     AND (f.amount_due - f.amount_paid) > 0
                 GROUP BY s.student_no
             ),
