@@ -210,7 +210,7 @@ def display_reports_menu():
 
   -- Leadership and History --
  [12] Executive committee members (by org/year)
- [13] Presidents by org (chronological)
+ [13] Presidents/roles by org (chronological)
  
   -- Statistics --
  [14] Active vs inactive members over N semesters
@@ -299,11 +299,16 @@ def handle_fee_management(conn):
 
 def handle_reports(conn):
     report_commands = {
+        
         7: reports.view_alumni,
-        11: reports.view_executive,
-        12: reports.view_presidents,
-        13: reports.get_active_inactive_percentage,
-        14: reports.get_org_fee_summary
+        8: reports.view_unpaid_members,
+        9: reports.view_member_unpaid_fees,
+        10: reports.view_late_payments,
+        11: reports.view_members_highest_debt,
+        12: reports.view_executive,
+        13: reports.view_presidents,
+        14: reports.get_active_inactive_percentage,
+        15: reports.get_org_fee_summary
     }
 
     run_menu_loop(display_reports_menu, report_commands, conn=conn)
