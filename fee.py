@@ -78,6 +78,13 @@ def view_all(conn):
                         WHERE
                             org_name = ?
                        """, (org_name, ))
+        results = cursor.fetchall()
+        
+        if results:
+            headers = ["Fee ID", "Student No.", "Amount Due", "Due Date", "Semester", "Is Fully Paid", "Amount Paid", "Payment Date"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
+        else:
+            print("❌ No fee records found.")
     except Exception as e:
         print(f"❌ Failed to view fees: {e}")
     finally:
