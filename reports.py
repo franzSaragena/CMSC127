@@ -5,8 +5,17 @@ def view_unpaid_members(conn):
     print("View members with unpaid fees (by organization, semester, and academic year)")
     
     org_name = input("Enter organization name: ").strip()
-    semester = input("Enter semester (e.g. Fall, Spring): ").strip()
+    semester = input("Enter semester (1/2): ").strip()
     acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
+
+    # Extract years    
+    try:
+        start_year = int(acad_year[4:])
+        end_year = int(acad_year[:4])
+    except ValueError:
+        print("⚠️ Invalid academic year format. Please use YYYY-YYYY.")
+        return
+    
     
     try:
         cursor = conn.cursor()
@@ -17,21 +26,20 @@ def view_unpaid_members(conn):
                 s.last_name,
                 m.role,
                 m.committee,
-                m.membership_status
-            FROM
-                student s
-            NATURAL JOIN
-                membership m
-            NATURAL JOIN
-                fee f
+                m.membership_status,
+            FROM fee f
+            JOIN membership m ON f.student_no = m.student_no
+                             AND f.org_name = m.org_name
+            JOIN student s ON m.student_no = s.student_no
             WHERE
                 m.org_name = ?
-                AND m.semester = ?
-                AND m.acad_year = ?
+                AND f.fee_semester = ?
+                AND YEAR(f.due_date) IN (?, ?)
                 AND f.payment_date IS NULL
+            GROUP BY s.student_no
             ORDER BY
                 s.last_name, s.first_name
-        """, (org_name, semester, acad_year))
+        """, (org_name, semester, start_year, end_year))
         
         rows = cursor.fetchall()
         
