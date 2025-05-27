@@ -23,7 +23,11 @@ def view_executive(conn):
                             AND m.committee="Executive"
                             AND m.acad_year=?
                        """, (org_name, acad_year))
-        conn.commit()
+        results = cursor.fetchall()
+        
+        if results:
+            headers = ["Student Number", "First Name", "Last Name", "Role", "Semester"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
     except Exception as e:
         print(f"❌ Failed to view executive members: {e}")
     finally:
@@ -41,6 +45,7 @@ def view_presidents(conn):
                             s.student_no,
                             s.first_name,
                             s.last_name,
+                            m.acad_year,
                             m.semester
                         FROM
                             student s
@@ -52,7 +57,11 @@ def view_presidents(conn):
                         ORDER BY
                             m.acad_year DESC
                        """, (org_name, role))
-        conn.commit()
+        results = cursor.fetchall()
+        
+        if results:
+            headers = ["Student Number", "First Name", "Last Name", "Academic Year", "Semester"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
     except Exception as e:
         print(f"❌ Failed to view {role}s: {e}")
     finally:
@@ -91,7 +100,7 @@ def get_active_inactive_percentage(conn):
         results = cursor.fetchall()
         
         if results:
-            headers = ["Academic Year", "Semster", "Academic Year", "Status", "Count", "Percentage"]
+            headers = ["Academic Year", "Semester", "Status", "Count", "Percentage"]
             print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
         else:
             print("❌ No records found.")
@@ -102,10 +111,10 @@ def get_active_inactive_percentage(conn):
         
         
 def get_org_fee_summary(conn):
-    print("Total Amount of Unpaid and Paid Fees")
     org_name = input("Enter organization name: ").strip()
     date = input("Enter date (YYYY-MM-DD): ").strip()
     
+    print(f"Total Amount of Unpaid and Paid Fees As of {date}")
     try:
         cursor = conn.cursor()
         cursor.execute("""
@@ -122,7 +131,11 @@ def get_org_fee_summary(conn):
                     FROM fee
                     WHERE org_name = ?
                        """, (date, date, date, org_name))
-        conn.commit()
+        results = cursor.fetchall()
+        
+        if results:
+            headers = ["Total Amount Paid", "Total Amount Unpaid"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
     except Exception as e:
         print(f"❌ Error during viewing fee summary: {e}")
     finally:
