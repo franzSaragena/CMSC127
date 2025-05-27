@@ -53,24 +53,56 @@ def remove_fee(conn):
         
 def record_payment(conn):
     print("\nRecord payment.\n")
-    fee_id = int(input("Enter fee id: "))
-    
-    if not check_fee_exists(conn, fee_id):
-        print(f"❌ Fee with id {fee_id} not found in the database.")
-        return
-    
-    amount_paid = float(input("Enter amount paid: "))
-    payment_date = input("Enter payment date (YYYY-MM-DD): ").strip()
-    
     try:
+        fee_id = int(input("Enter fee ID: "))
+
+        if not check_fee_exists(conn, fee_id):
+            print(f"❌ Fee with ID {fee_id} not found in the database.")
+            return
+
+        amount_to_add = float(input("Enter amount paid now: "))
+        if amount_to_add <= 0:
+            print("❌ Amount must be greater than 0.")
+            return
+
+        payment_date = input("Enter payment date (YYYY-MM-DD): ").strip()
+
         cursor = conn.cursor()
-        cursor.execute("UPDATE fee SET amount_paid = ?, payment_date = ? WHERE fee_id = ?", (amount_paid, payment_date, fee_id))
+
+        # Get current amount_paid and amount_due
+        cursor.execute("SELECT amount_paid, amount_due FROM fee WHERE fee_id = ?", (fee_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            print("❌ Fee record could not be retrieved.")
+            return
+
+        current_paid = float(row[0])
+        amount_due = float(row[1])
+        new_total_paid = current_paid + amount_to_add
+
+
+        if new_total_paid > amount_due:
+            print(f"❌ Total paid ({new_total_paid:.2f}) exceeds amount due ({amount_due:.2f}).")
+            return
+
+        # Update the record with the new amount and date
+        cursor.execute("""
+            UPDATE fee
+            SET amount_paid = ?, payment_date = ?
+            WHERE fee_id = ?
+        """, (new_total_paid, payment_date, fee_id))
+
         conn.commit()
-        print("✅ Payment recorded successfully.")
+        print(f"✅ Payment recorded. New total paid: {new_total_paid:.2f} / {amount_due:.2f}")
+
+    except ValueError:
+        print("❌ Invalid input.")
     except Exception as e:
         print(f"❌ Failed to record payment: {e}")
     finally:
         cursor.close()
+
 
 def view_all(conn):
     print("View all fees by org")
