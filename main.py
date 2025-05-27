@@ -210,7 +210,7 @@ def display_reports_menu():
 
   -- Leadership and History --
  [12] Executive committee members (by org/year)
- [13] Presidents by org (chronological)
+ [13] Presidents/roles by org (chronological)
  
   -- Statistics --
  [14] Active vs inactive members over N semesters
