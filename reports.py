@@ -140,3 +140,37 @@ def get_org_fee_summary(conn):
         print(f"❌ Error during viewing fee summary: {e}")
     finally:
         cursor.close()
+        
+def view_alumni(conn):
+    org_name = input("Enter organization name: ").strip()
+    date = input("Enter date (YYYY-MM-DD): ").strip()
+
+    as_of_year = int(date[:4])  # Extract year from input string
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT m.student_no, s.first_name, s.last_name, m.acad_year, m.semester,
+                   m.role, m.committee, m.batch
+            FROM membership m
+            JOIN student s ON m.student_no = s.student_no
+            WHERE m.org_name = ?
+              AND m.membership_status = 'Alumni'
+        """, (org_name,))
+        rows = cursor.fetchall()
+
+        filtered = []
+        for row in rows:
+            acad_year_start = int(row[3][:4])  # Extract start year from 'YYYY-YYYY'
+            if acad_year_start <= as_of_year:
+                filtered.append(row)
+
+        if not filtered:
+            print(f"❌ No alumni members found for '{org_name}' as of {as_of_year}.")
+            return
+
+        headers = ["Student No.", "First Name", "Last Name", "Academic Year", "Semester", "Role", "Committee", "Batch"]
+        print(f"\nAlumni Members of '{org_name}' as of {date}")
+        print("\n" + tabulate(filtered, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
+    except Exception as e:
+        print(f"❌ Error: {e}")
