@@ -1,6 +1,6 @@
 # NOTES
 # remove_member not working yet,
-# RESOLVE: should we delete fees/fee history upon removing a member?
+# RESOLVE: should we delete fees/fee history upon removing a member? ANS : yes
 
 import mariadb
 from tabulate import tabulate

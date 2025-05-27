@@ -1,4 +1,4 @@
-import tabulate
+from tabulate import tabulate
 
 def add_org(conn):
     org_name = input("Enter organization name: ")
@@ -52,7 +52,7 @@ def update_org(conn):
 def view_all(conn):
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT org_name Organization FROM ORGANIZATION ORDER BY org_name ASC")
+        cursor.execute("SELECT org_name Organization FROM organization ORDER BY org_name ASC")
         orgs = cursor.fetchall()
         if not orgs:
             print("No organizations found.")

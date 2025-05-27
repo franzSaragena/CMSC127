@@ -1,5 +1,5 @@
 import mariadb
-import org, membership, fee, reports, student
+import org, membership, fee, report, student
 
 # === DATABASE CONNECTION ===
 
@@ -298,7 +298,12 @@ def handle_fee_management(conn):
 
 def handle_reports(conn):
     report_commands = {
-        
+        1: report.view_filter_role,
+        2: report.view_filter_status,
+        3: report.view_filter_gender,
+        4: report.view_filter_degprog, 
+        5: report.view_filter_batch,
+        6: report.view_filter_comm
     }
 
     run_menu_loop(display_reports_menu, report_commands, conn=conn)
