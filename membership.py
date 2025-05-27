@@ -6,6 +6,7 @@ import mariadb
 from tabulate import tabulate
 
 def add_member(conn):
+    print("Add a student as a member of an organization.\n")
     student_no = int(input("Enter student no.:  "))
     org_name = input("Enter organization name: ").strip()
     acad_year = input("Enter academic year (yyyy-yyyy): ").strip()
@@ -46,6 +47,8 @@ def add_member(conn):
         cursor.close()
         
 def remove_member(conn):
+    print("Remove a student as member.\n")
+    
     student_no = int(input("Enter student no.:  "))
     org_name = input("Enter organization name: ").strip()
     try:
@@ -144,11 +147,16 @@ def search_member(conn):
         
         elif choice == 2:
             name = input("Enter name (partial OK): ").strip().capitalize()
+            name = f"%{name.lower()}%"
             query = """
                 SELECT student_no, s.first_name, s.last_name, s.gender, s.degree_program, m.org_name, m.acad_year, m.semester, m.role, m.committee, m.batch, m.membership_status
                 FROM student s
                 NATURAL JOIN membership m
-                WHERE s.first_name LIKE ? OR s.last_name LIKE ?
+                WHERE 
+                    LOWER(s.first_name) LIKE ? 
+                    OR LOWER(s.last_name) LIKE ?
+                    OR LOWER(CONCAT(s.first_name, ' ', s.last_name)) LIKE ?
+                    OR LOWER(CONCAT(s.last_name, ' ', s.first_name)) LIKE ?
                 ORDER BY s.student_no, m.acad_year, m.semester
             """
             cursor.execute(query, (name, name))
