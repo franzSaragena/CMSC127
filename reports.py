@@ -61,12 +61,10 @@ def view_member_unpaid_fees(conn):
     query = """
             SELECT
                 f.org_name,
-                f.acad_year,
-                f.semester,
+                f.fee_semester,
                 f.amount_due,
                 f.amount_paid,
                 f.due_date,
-                f.payment_date
             FROM 
                 fee f
             WHERE 
@@ -74,7 +72,7 @@ def view_member_unpaid_fees(conn):
             AND 
                 f.payment_date IS NULL
             ORDER BY 
-                f.org_name, f.acad_year DESC, f.semester DESC;
+                f.org_name, f.due_date DESC, f.fee_semester DESC;
             """
 
     try:
@@ -83,7 +81,7 @@ def view_member_unpaid_fees(conn):
         results = cursor.fetchall()
 
         if results:
-            headers = ["Organization", "Academic Year", "Semester", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
+            headers = ["Organization", "Semester", "Amount Due", "Amount Paid", "Due Date"]
             print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
         else:
             print("✅ No unpaid fees found for this member.")
@@ -111,7 +109,7 @@ def view_late_payments(conn):
         FROM fee f
         JOIN student s ON f.student_no = s.student_no
         WHERE f.org_name = ?
-        AND f.semester = ?
+        AND f.fee_semester = ?
         AND f.acad_year = ?
         AND f.payment_date IS NOT NULL
         AND f.payment_date > f.due_date
