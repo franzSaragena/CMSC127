@@ -81,7 +81,6 @@ def record_payment(conn):
         amount_due = float(row[1])
         new_total_paid = current_paid + amount_to_add
 
-
         if new_total_paid > amount_due:
             print(f"❌ Total paid ({new_total_paid:.2f}) exceeds amount due ({amount_due:.2f}).")
             return
@@ -117,7 +116,10 @@ def view_all(conn):
                             amount_due,
                             due_date,
                             fee_semester,
-                            is_fully_paid,
+                            CASE is_fully_paid
+                                WHEN 1 THEN 'Yes'
+                                ELSE 'No'
+                            END AS is_fully_paid,
                             amount_paid,
                             payment_date
                         FROM

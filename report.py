@@ -285,6 +285,10 @@ def view_late_payments(conn):
             s.last_name,
             f.amount_due,
             f.amount_paid,
+            CASE f.is_fully_paid
+                WHEN 1 THEN 'Yes'
+                ELSE 'No'
+            END AS is_fully_paid,
             f.due_date,
             f.payment_date
         FROM fee f
@@ -304,8 +308,8 @@ def view_late_payments(conn):
         results = cursor.fetchall()
 
         if results:
-            headers = ["Student No", "First Name", "Last Name", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
-            print(f"\nLate Payments for {org_name} - {semester} {acad_year}\n")
+            headers = ["Student No", "First Name", "Last Name", "Amount Due", "Amount Paid", "Is Fully Paid", "Due Date", "Payment Date"]
+            print(f"\nLate Payments for {org_name} - {semester}S {acad_year}\n")
             print(tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
         else:
             print(f"✅ No late payments found for {org_name} {semester} {acad_year}.")
