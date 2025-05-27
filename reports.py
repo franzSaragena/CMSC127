@@ -1,5 +1,189 @@
 from tabulate import tabulate
 
+# [7] Members with unpaid fees (by org/semester/year)
+def view_unpaid_members(conn):
+    print("View members with unpaid fees (by organization, semester, and academic year)")
+    
+    org_name = input("Enter organization name: ").strip()
+    semester = input("Enter semester (1/2): ").strip()
+    acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                s.student_no,
+                s.first_name,
+                s.last_name,
+                m.acad_year,
+                m.semester,
+                f.amount_due,
+                f.amount_paid,
+                f.due_date
+            FROM 
+                membership m
+            NATURAL JOIN 
+                student s
+            NATURAL JOIN 
+                fee f
+            WHERE
+                m.org_name=?
+                AND NOT f.is_fully_paid
+                AND m.acad_year=?
+                AND m.semester=?
+        """, (org_name, acad_year, semester))
+        
+        rows = cursor.fetchall()
+        
+        if rows:
+            headers = ["Student No", "First Name", "Last Name", "Academic Year", "Semester", "Amount Due", "Amount Paid", "Due Date"]
+            print(tabulate(rows, headers=headers, tablefmt="grid", stralign="center"))
+        else:
+            print("No members with unpaid fees found for the given criteria.")
+    except Exception as e:
+        print(f"❌ Failed to retrieve unpaid members: {e}")
+    finally:
+        cursor.close()
+    
+# [8] A member's unpaid fees across all orgs (Member POV)
+def view_member_unpaid_fees(conn):
+    print("View a member's unpaid fees across all organizations.")
+    student_no = input("Enter student number: ").strip()
+
+    query = """
+            SELECT 
+                fee_id,
+                org_name,
+                amount_due, 
+                amount_paid, 
+                due_date, 
+                fee_semester
+            FROM 
+                fee 
+            WHERE
+                NOT is_fully_paid
+                AND student_no=?
+            ORDER BY 
+                org_name, due_date DESC, fee_semester DESC;
+            """
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, (student_no,))
+        results = cursor.fetchall()
+
+        if results:
+            headers = ["Fee ID", "Organization", "Amount Due", "Amount Paid", "Due Date", "Semester"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
+        else:
+            print("✅ No unpaid fees found for this member.")
+    except Exception as e:
+        print(f"❌ Failed to retrieve unpaid fees: {e}")
+    finally:
+        cursor.close()
+        
+# [9] Late payments (by org/semester/year)
+def view_late_payments(conn):
+    print("View late payments by organization, semester, and academic year.")
+    org_name = input("Enter organization name: ").strip()
+    semester = input("Enter semester (1/2): ").strip()
+    acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
+
+    query = """
+            SELECT
+                s.student_no,
+                s.first_name,
+                s.last_name,
+                f.fee_id,
+                f.amount_due,
+                f.amount_paid,
+                f.due_date,
+                f.payment_date
+            FROM
+                student s
+            NATURAL JOIN
+                membership m
+            NATURAL JOIN
+                fee f
+            WHERE
+                m.org_name=?
+                AND m.acad_year=?
+                AND m.semester=?
+                AND f.payment_date IS NOT NULL
+                AND f.payment_date > f.due_date
+            ORDER BY f.payment_date DESC
+    """
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, (org_name, acad_year, semester))
+        results = cursor.fetchall()
+
+        if results:
+            headers = ["Student No", "First Name", "Last Name", "Fee ID", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
+            print(f"\nLate Payments for {org_name} - {semester} {acad_year}\n")
+            print(tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
+        else:
+            print(f"No late payments found for {org_name} {semester} {acad_year}.")
+    except Exception as e:
+        print(f"❌ Failed to retrieve late payments: {e}")
+    finally:
+        cursor.close()
+        
+# [10] Members with highest debt (by org/semester)
+def view_members_highest_debt(conn):
+    print("View members with the highest debt by organization, semester, and academic year")
+    org_name = input("Enter organization name: ").strip()
+    semester = input("Enter semester (1/2): ").strip()
+    acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
+
+    try:
+        cursor = conn.cursor()
+        query = """
+            WITH member_debts AS (
+                SELECT
+                    s.student_no,
+                    s.first_name,
+                    s.last_name,
+                    SUM(f.amount_due - f.amount_paid) AS total_debt
+                FROM student s
+                JOIN membership m ON s.student_no = m.student_no
+                JOIN fee f ON m.student_no = f.student_no
+                    AND m.org_name = f.org_name
+                    AND m.semester = f.fee_semester
+                WHERE
+                    f.org_name = ?
+                    AND f.fee_semester = ?
+                    AND m.acad_year = ?
+                    AND (f.amount_due - f.amount_paid) > 0
+                GROUP BY s.student_no
+            ),
+            max_debt AS (
+                SELECT MAX(total_debt) AS highest_debt FROM member_debts
+            )
+            SELECT
+                student_no,
+                first_name,
+                last_name,
+                total_debt
+            FROM member_debts
+            WHERE total_debt = (SELECT highest_debt FROM max_debt)
+            ORDER BY student_no;
+        """
+
+        cursor.execute(query, (org_name, semester, acad_year))
+        results = cursor.fetchall()
+
+        if results:
+            headers = ["Student No", "First Name", "Last Name", "Total Debt"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
+        else:
+            print("❌ No members with unpaid fees found.")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    finally:
+        cursor.close()
+
 def view_executive(conn):
     print("View all executive committee members of a given organization for a given academic year")
     org_name = input("Enter organization name: ").strip()
