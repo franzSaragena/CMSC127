@@ -1,4 +1,3 @@
-# NOT YET TESTED
 from errorcatching import *
 from tabulate import tabulate
 

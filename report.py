@@ -184,7 +184,7 @@ def view_members_by_filter(conn, org_name, filter_type, filter_value):
     finally:
         cursor.close()
 
-# [7] Members with unpaid fees (by org/semester/year)
+
 def view_unpaid_members(conn):
     print("View members with unpaid fees (by organization, semester, and academic year)")
 
@@ -230,7 +230,7 @@ def view_unpaid_members(conn):
     finally:
         cursor.close()
     
-# [8] A member's unpaid fees across all orgs (Member POV)
+
 def view_member_unpaid_fees(conn):
     print("View a member's unpaid fees across all organizations.")
     student_no = input("Enter student number: ").strip()
@@ -319,7 +319,7 @@ def view_late_payments(conn):
         cursor.close()
 
         
-# [10] Members with highest debt (by org/semester)
+
 def view_members_highest_debt(conn):
     print("View members with the highest debt by organization, semester, and academic year")
     org_name = input("Enter organization name: ").strip()
