@@ -182,10 +182,9 @@ def display_fee_menu():
 
   [1] Assign fee to member
   [2] Record payment
-  [3] View all fees
-  [4] View outstanding balances
+  [3] View all org fees
   
-    [0] Back to Main Menu
+  [0] Back to Main Menu
 """)
 
 
@@ -201,20 +200,21 @@ def display_reports_menu():
   [4] Members by degree program
   [5] Members by batch
   [6] Members by committee
+  [7] Alumni Members
 
   -- Fee and Payment Insights --
-  [7] Members with unpaid fees (by org/semester/year)
-  [8] A member's unpaid fees across all orgs (Member POV)
-  [9] Late payments (by org/semester/year)
- [10] Members with highest debt (by org/semester)
+  [8] Members with unpaid fees (by org/semester/year)
+  [9] A member's unpaid fees across all orgs (Member POV)
+ [10] Late payments (by org/semester/year)
+ [11] Members with highest debt (by org/semester)
 
   -- Leadership and History --
- [11] Executive committee members (by org/year)
- [12] Presidents by org (chronological)
+ [12] Executive committee members (by org/year)
+ [13] Presidents by org (chronological)
  
   -- Statistics --
- [13] Active vs inactive members over N semesters
- [14] Total paid and unpaid fees (as of a date)
+ [14] Active vs inactive members over N semesters
+ [15] Total paid and unpaid fees (as of a date)
  
  [0] Back to Main Menu
 """)
@@ -288,7 +288,8 @@ def handle_membership(conn):
 def handle_fee_management(conn):
     fee_commands = {
         1: fee.assign_fee,
-        2: fee.record_payment
+        2: fee.record_payment,
+        3: fee.view_all
     }
 
     run_menu_loop(display_fee_menu, fee_commands, conn=conn)
@@ -298,7 +299,11 @@ def handle_fee_management(conn):
 
 def handle_reports(conn):
     report_commands = {
-        
+        7: reports.view_alumni,
+        11: reports.view_executive,
+        12: reports.view_presidents,
+        13: reports.get_active_inactive_percentage,
+        14: reports.get_org_fee_summary
     }
 
     run_menu_loop(display_reports_menu, report_commands, conn=conn)
