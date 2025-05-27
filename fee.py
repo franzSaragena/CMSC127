@@ -1,5 +1,6 @@
 # NOT YET TESTED
-from errorcatching import check_student_exists;
+from errorcatching import check_student_exists
+from tabulate import tabulate
 
 def assign_fee(conn):
     student_no = int(input("Enter student number: "))
@@ -56,53 +57,36 @@ def record_payment(conn):
     finally:
         cursor.close()
 
-def update_fee(conn):
-    print("Select fee to update.")
-    fee_id = int(input("Enter fee ID: "))
-
-    print("\nLeave a field blank if you don't want to update it.")
-
-    # Dictionary of field names and input prompts
-    fields = {
-        "student_no": "Enter new student number: ",
-        "org_name": "Enter new organization name: ",
-        "amount_due": "Enter new amount due: ",
-        "due_date": "Enter new due date (YYYY-MM-DD): ",
-        "fee_semester": "Enter new semester (1/2): ",
-        "amount_paid": "Enter new amount paid: ",
-        "payment_date": "Enter new payment date (YYYY-MM-DD): "
-    }
-
-    updates = []
-    params = []
-
-    for column, prompt in fields.items():
-        user_input = input(prompt).strip()
-        if user_input != "":
-            # Convert to correct type if necessary
-            if column in ["student_no", "fee_semester"]:
-                user_input = int(user_input)
-            elif column in ["amount_due", "amount_paid"]:
-                user_input = float(user_input)
-            # Else, keep as string (e.g., dates and org_name)
-            updates.append(f"{column} = ?")
-            params.append(user_input)
-
-    if not updates:
-        print("⚠️ No fields to update. Operation cancelled.")
-        return
-
+def view_all(conn):
+    print("View all fees by org")
+    org_name = input("Enter organization name: ").strip()
+    
     try:
         cursor = conn.cursor()
-        sql = f"UPDATE fee SET {', '.join(updates)} WHERE fee_id = ?"
-        params.append(fee_id)
-        cursor.execute(sql, params)
-        conn.commit()
-        print("✅ Fee updated successfully.")
+        cursor.execute("""
+                       SELECT
+                            fee_id,
+                            student_no,
+                            amount_due,
+                            due_date,
+                            fee_semester,
+                            is_fully_paid,
+                            amount_paid,
+                            payment_date
+                        FROM
+                            fee
+                        WHERE
+                            org_name = ?
+                       """, (org_name, ))
+        results = cursor.fetchall()
+        
+        if results:
+            headers = ["Fee ID", "Student No.", "Amount Due", "Due Date", "Semester", "Is Fully Paid", "Amount Paid", "Payment Date"]
+            print("\n" + tabulate(results, headers=headers, tablefmt="grid", numalign="center", stralign="center"))
+        else:
+            print("❌ No fee records found.")
     except Exception as e:
-        print(f"❌ Failed to update fee: {e}")
+        print(f"❌ Failed to view fees: {e}")
     finally:
         cursor.close()
-
-        
     

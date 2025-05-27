@@ -67,9 +67,11 @@ def update_membership(conn):
     print("Select membership to update. ")
     
     student_no = int(input("Enter student no.: "))
-    org = input("Enter organization name: ").strip()
-    year = input("Enter academic year (yyyy-yyyy): ").strip()
-    semester = int(input("Enter semester (1/2): "))
+    org = input("Enter current organization name: ").strip()
+    year = input("Enter current academic year (yyyy-yyyy): ").strip()
+    semester = int(input("Enter current semester (1/2): "))
+    committee = input("Enter current committee: ").strip().capitalize()
+    role = input("Enter current role: ").strip()
 
     print("\nLeave a field blank if you don't want to update it.")
 
@@ -95,14 +97,14 @@ def update_membership(conn):
         return
 
     # Add WHERE clause parameters
-    params.extend([student_no, org, year, semester])
+    params.extend([student_no, org, year, semester, committee, role])
 
     try:
         cursor = conn.cursor()
         query = f"""
             UPDATE membership
             SET {', '.join(updates)}
-            WHERE student_no = ? AND org_name = ? AND acad_year = ? AND semester = ?
+            WHERE student_no = ? AND org_name = ? AND acad_year = ? AND semester = ? AND committee = ? AND role = ?
         """
         cursor.execute(query, params)
         if cursor.rowcount == 0:

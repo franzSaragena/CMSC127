@@ -57,7 +57,7 @@ def view_all(conn):
         if not orgs:
             print("No organizations found.")
             return
-        print("/n"+tabulate(orgs, headers=["Registered Organizations"], tablefmt="grid", numalign="center", stralign="center"))
+        print("\n"+tabulate(orgs, headers=["Registered Organizations"], tablefmt="grid", numalign="center", stralign="center"))
     except Exception as e:
         print(f"❌ Error retrieving organizations: {e}")
     finally:

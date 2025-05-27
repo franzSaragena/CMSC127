@@ -1,5 +1,5 @@
-from errorcatching import check_student_exists;
-import tabulate;
+from errorcatching import check_student_exists
+from tabulate import tabulate
 
 def add_student(conn):
     student_no = input("Enter student No: ")
