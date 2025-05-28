@@ -184,7 +184,7 @@ def view_members_by_filter(conn, org_name, filter_type, filter_value):
     finally:
         cursor.close()
 
-# [7] Members with unpaid fees (by org/semester/year)
+
 def view_unpaid_members(conn):
     print("View members with unpaid fees (by organization, semester, and academic year)")
     
@@ -229,7 +229,7 @@ def view_unpaid_members(conn):
     finally:
         cursor.close()
     
-# [8] A member's unpaid fees across all orgs (Member POV)
+
 def view_member_unpaid_fees(conn):
     print("View a member's unpaid fees across all organizations.")
     student_no = input("Enter student number: ").strip()
@@ -274,28 +274,27 @@ def view_late_payments(conn):
     acad_year = input("Enter academic year (YYYY-YYYY): ").strip()
 
     query = """
-            SELECT
-                s.student_no,
-                s.first_name,
-                s.last_name,
-                f.fee_id,
-                f.amount_due,
-                f.amount_paid,
-                f.due_date,
-                f.payment_date
-            FROM
-                student s
-            NATURAL JOIN
-                membership m
-            NATURAL JOIN
-                fee f
-            WHERE
-                m.org_name=?
-                AND m.acad_year=?
-                AND m.semester=?
-                AND f.payment_date IS NOT NULL
-                AND f.payment_date > f.due_date
-            ORDER BY f.payment_date DESC
+        SELECT
+            s.student_no,
+            s.first_name,
+            s.last_name,
+            f.amount_due,
+            f.amount_paid,
+            CASE f.is_fully_paid
+                WHEN 1 THEN 'Yes'
+                ELSE 'No'
+            END AS is_fully_paid,
+            f.due_date,
+            f.payment_date
+        FROM fee f
+        JOIN membership m ON f.student_no = m.student_no AND f.org_name = m.org_name
+        JOIN student s ON f.student_no = s.student_no
+        WHERE f.org_name = ?
+            AND m.semester = ?
+            AND m.acad_year = ?
+            AND f.payment_date IS NOT NULL
+            AND f.payment_date > f.due_date
+        ORDER BY f.payment_date DESC;
     """
 
     try:
@@ -304,8 +303,8 @@ def view_late_payments(conn):
         results = cursor.fetchall()
 
         if results:
-            headers = ["Student No", "First Name", "Last Name", "Fee ID", "Amount Due", "Amount Paid", "Due Date", "Payment Date"]
-            print(f"\nLate Payments for {org_name} - {semester} {acad_year}\n")
+            headers = ["Student No", "First Name", "Last Name", "Amount Due", "Amount Paid", "Is Fully Paid", "Due Date", "Payment Date"]
+            print(f"\nLate Payments for {org_name} - {semester}S {acad_year}\n")
             print(tabulate(results, headers=headers, tablefmt="grid", numalign="right", stralign="center"))
         else:
             print(f"No late payments found for {org_name} {semester} {acad_year}.")
@@ -313,8 +312,9 @@ def view_late_payments(conn):
         print(f"❌ Failed to retrieve late payments: {e}")
     finally:
         cursor.close()
+
         
-# [10] Members with highest debt (by org/semester)
+
 def view_members_highest_debt(conn):
     print("View members with the highest debt by organization, semester, and academic year")
     org_name = input("Enter organization name: ").strip()

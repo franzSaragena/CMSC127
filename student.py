@@ -10,7 +10,7 @@ def add_student(conn):
     fname = input("Enter first name: ").strip().capitalize()
     lname = input("Enter last name: ").strip().capitalize()
     gender = input("Enter gender (Male/Female): ").strip().capitalize()
-    degree = input("Enter degree program: ").strip().capitalize()
+    degree = input("Enter degree program (e.g. BSCS): ").strip().upper()
 
     try:
         cursor = conn.cursor()

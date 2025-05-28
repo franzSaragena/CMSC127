@@ -26,8 +26,16 @@ CREATE TABLE IF NOT EXISTS membership (
     committee VARCHAR(100) NOT NULL,
     batch INT(4) NOT NULL,
     membership_status VARCHAR(9) NOT NULL,
-    CONSTRAINT membership_student_no_fk FOREIGN KEY(student_no) REFERENCES student(student_no),
-    CONSTRAINT membership_org_name_fk FOREIGN KEY(org_name) REFERENCES organization(org_name),
+    CONSTRAINT membership_student_no_fk 
+        FOREIGN KEY(student_no) 
+        REFERENCES student(student_no)
+        ON UPDATE CASCADE 
+        ON DELETE CASCADE,
+    CONSTRAINT membership_org_name_fk 
+        FOREIGN KEY(org_name) 
+        REFERENCES organization(org_name)
+        ON UPDATE CASCADE 
+        ON DELETE CASCADE,
     PRIMARY KEY(student_no, org_name, acad_year, semester, role, committee, batch, membership_status)
 );
 
@@ -42,7 +50,11 @@ CREATE TABLE IF NOT EXISTS fee (
     is_fully_paid BOOLEAN GENERATED ALWAYS AS (amount_paid = amount_due) STORED,
     amount_paid DECIMAL(5,2) NOT NULL DEFAULT 0,
     payment_date DATE DEFAULT NULL,
-    CONSTRAINT fee_student_org_fk FOREIGN KEY(student_no, org_name) REFERENCES membership(student_no, org_name)
+    CONSTRAINT fee_student_org_fk 
+        FOREIGN KEY(student_no, org_name) 
+        REFERENCES membership(student_no, org_name)
+        ON UPDATE CASCADE 
+        ON DELETE CASCADE
 );
 
 -- Insert dummy organizations

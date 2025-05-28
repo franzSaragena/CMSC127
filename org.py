@@ -1,8 +1,14 @@
 from tabulate import tabulate
+from errorcatching import *
 
 def add_org(conn):
+    print("\nAdding an organization.")
     org_name = input("Enter organization name: ")
 
+    if check_org_exists(conn, org_name):
+        print(f"❌ Organization already exists.")
+        return
+    
     try:
         cursor = conn.cursor()
         cursor.execute("""
@@ -17,7 +23,12 @@ def add_org(conn):
         cursor.close()
         
 def delete_org(conn):
+    print("\nDeleting an organization.")
     org_name = input("Enter organization name: ")
+    
+    if not check_org_exists(conn, org_name):
+        print(f"❌ Organization does not exist.")
+        return
     
     try:
         cursor = conn.cursor()
@@ -33,7 +44,13 @@ def delete_org(conn):
         cursor.close()
 
 def update_org(conn):
+    print("\nUpdating an organization.")
     org_name = input("Enter organization name: ")
+    
+    if not check_org_exists(conn, org_name):
+        print(f"❌ Organization does not exist.")
+        return
+    
     new_name = input("Enter new organization name: ")
     try:
         cursor = conn.cursor()
