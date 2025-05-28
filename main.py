@@ -210,7 +210,7 @@ def display_reports_menu():
 
   -- Leadership and History --
  [12] Executive committee members (by org/year)
- [13] Presidents by org (chronological)
+ [13] Presidents/roles by org (chronological)
  
   -- Statistics --
  [14] Active vs inactive members over N semesters
@@ -302,7 +302,7 @@ def handle_reports(conn):
         1: report.view_filter_role,
         2: report.view_filter_status,
         3: report.view_filter_gender,
-        4: report.view_filter_degprog, 
+        4: report.view_filter_degprog,
         5: report.view_filter_batch,
         6: report.view_filter_comm,
         7: report.view_alumni,
